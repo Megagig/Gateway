@@ -1,39 +1,62 @@
 import express from 'express';
 import mongoose from 'mongoose';
+import { User } from '../models/user.model.js';
+import bcryptjs from 'bcryptjs';
+import { generateVerificationToken } from '../utils/generateVerificationCode.js';
+import { generateTokenAndSetCookie } from '../utils/generateTokenAndSetCookie.js';
 
 export const signup = async (req, res) => {
-  const { email, password } = req.body;
+  // Extract values from request body
+  const { email, password, name } = req.body;
 
   try {
-    const user = await User.create({ email, password });
+    // Validate that all fields are provided
+    if (!email || !password || !name) {
+      throw new Error('All fields are required');
+    }
 
-    res.status(201).json({ user });
+    // Check if user already exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      throw new Error('User already exists');
+    }
+
+    // hash password
+    const hashedPassword = await bcryptjs.hash(password, 10);
+
+    //generate verification code
+
+    const verificationToken = generateVerificationToken();
+
+    // Create new user
+    const user = new User({
+      email,
+      password: hashedPassword,
+      name,
+      verificationToken,
+      verificationExpiresAt: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
+    });
+
+    // Save user to database
+    await user.save();
+
+    //Creating the JWT and Setting a Cookie
+    generateTokenAndSetCookie(res, user._id);
+
+    res.status(201).json({
+      success: true,
+      message: 'User created successfully',
+      user: {
+        ...user._doc,
+        password: undefined,
+      },
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
 
-export const login = async (req, res) => {
-  const { email, password } = req.body;
-
-  try {
-    const user = await User.findOne({ email }).select('email password').exec();
-
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    const isMatch = await user.matchPassword(password);
-
-    if (!isMatch) {
-      return res.status(401).json({ error: 'Invalid credentials' });
-    }
-
-    res.status(200).json({ user });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+export const login = async (req, res) => {};
 
 export const logout = async (req, res) => {
   res.send('Logout route');
