@@ -1,8 +1,13 @@
 import { User } from '../models/user.model.js';
 import bcryptjs from 'bcryptjs';
+import crypto from 'crypto';
 import { generateVerificationToken } from '../utils/generateVerificationCode.js';
 import { generateTokenAndSetCookie } from '../utils/generateTokenAndSetCookie.js';
-import { sendVerificationEmail, sendWelcomeEmail } from '../mailtrap/emails.js';
+import {
+  sendPasswordResetEmail,
+  sendVerificationEmail,
+  sendWelcomeEmail,
+} from '../mailtrap/emails.js';
 
 export const signup = async (req, res) => {
   // Extract values from request body
@@ -159,4 +164,43 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
   res.clearCookie('token');
   res.status(200).json({ success: true, message: 'Logged out successfully' });
+};
+
+export const forgotPassword = async (req, res) => {
+  // Extract email from request body
+  const { email } = req.body;
+
+  try {
+    // Find the user by email
+    const user = await User.findOne({ email });
+
+    // check if user exists
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'User not found' });
+    }
+
+    // Generate a reset token and expiration date
+    const resetToken = crypto.randomBytes(20).toString('hex');
+    const resetTokenExpiresAt = Date.now() + 1 * 60 * 60 * 1000; // 1 hour
+
+    // Update the user with the reset token and expiration date
+    user.resetPasswordToken = resetToken;
+    user.resetTokenExpiresAt = resetTokenExpiresAt;
+    await user.save();
+    // Send a reset password email with the reset token link to the user email address (use the sendResetPasswordEmail function) and return a success response
+    await sendPasswordResetEmail(
+      user.email,
+      `${process.env.CLIENT_URL}/reset-password/${resetToken}`
+    );
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset email sent successfully',
+    });
+  } catch (error) {
+    console.log('Error in forgot password:', error.message);
+    res.status(400).json({ success: false, message: error.message });
+  }
 };
