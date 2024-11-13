@@ -103,8 +103,60 @@ export const verifyEmail = async (req, res) => {
   }
 };
 
-export const login = async (req, res) => {};
+export const login = async (req, res) => {
+  const { email, password } = req.body;
+  try {
+    //find the user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid credentials' });
+    }
+
+    //check if password is correct
+    const isPasswordValid = await bcryptjs.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Invalid credentials' });
+    }
+
+    //Check if user is verified
+    if (!user.isVerified) {
+      return res
+        .status(400)
+        .json({ success: false, message: 'Email not verified' });
+    }
+
+    //Creating the JWT and Setting a Cookie
+    generateTokenAndSetCookie(res, user._id);
+
+    //Update last login date
+
+    user.lastlogin = Date.now();
+
+    //save the user
+    await user.save();
+
+    // Send a success response
+
+    res.status(200).json({
+      success: true,
+      message: 'Logged in successfully',
+      user: {
+        ...user._doc,
+        password: undefined,
+      },
+    });
+  } catch (error) {
+    console.log('Error in Login:', error.message);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
 
 export const logout = async (req, res) => {
-  res.send('Logout route');
+  res.clearCookie('token');
+  res.status(200).json({ success: true, message: 'Logged out successfully' });
 };
