@@ -1,9 +1,8 @@
-import express from 'express';
-import mongoose from 'mongoose';
 import { User } from '../models/user.model.js';
 import bcryptjs from 'bcryptjs';
 import { generateVerificationToken } from '../utils/generateVerificationCode.js';
 import { generateTokenAndSetCookie } from '../utils/generateTokenAndSetCookie.js';
+import { sendVerificationEmail } from '../mailtrap/emails.js';
 
 export const signup = async (req, res) => {
   // Extract values from request body
@@ -42,6 +41,9 @@ export const signup = async (req, res) => {
 
     //Creating the JWT and Setting a Cookie
     generateTokenAndSetCookie(res, user._id);
+
+    //send verification email
+    await sendVerificationEmail(user.email, user.verificationToken);
 
     res.status(201).json({
       success: true,
