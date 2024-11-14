@@ -5,7 +5,9 @@
   "description": "Advanced MERN Auth Course: Email Verification, Password Recovery, and Welcome Emails",
   "main": "Backend/index.js",
   "scripts": {
-    "dev": "nodemon Backend/index.js"
+    "dev": "NODE_ENV=development nodemon Backend/index.js",
+    "start": "NODE_ENV=production node Backend/index.js",
+    "build": "npm install && npm install --prefix Frontend && npm run build --prefix Frontend"
   },
   "keywords": [
     "Authentication",
