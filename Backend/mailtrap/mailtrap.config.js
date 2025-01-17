@@ -18,19 +18,3 @@ export const sender = {
   email: 'hello@demomailtrap.com',
   name: 'Gateway API',
 };
-// const recipients = [
-//   {
-//     email: 'megagigsoftwaresolutions@gmail.com',
-//   },
-// ];
-
-// client
-//   .send({
-//     from: sender,
-//     to: recipients,
-//     subject: 'You are awesome!',
-//     text: 'Congrats for sending test email with Mailtrap!',
-//     html: '<h1>Congrats for sending test email with Mailtrap!</h1>',
-//     category: 'Integration Test',
-//   })
-//   .then(console.log, console.error);
