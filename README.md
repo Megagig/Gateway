@@ -127,7 +127,7 @@ Similar code found with 1 license type
 
 ## 🚀 Live Demo <a name="live-demo"></a>
 
-- [Live Demo Link](https://megamovietv.netlify.app/)
+- [Live Demo Link](https://gateway-ki9f.onrender.com)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
